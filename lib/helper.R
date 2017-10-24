@@ -20,15 +20,17 @@ read_eo_sheet <- function(sheet = stop("'sheet' must be provided"),
 ## names(data) <- c(names(data)[1:3], "", NA)
 ## head(data)
 clean_df <- function(data = stop("'data' must be provided")) {
-  if ("Date" %in% colnames(data)) {
-    data_out <-
-      data %>%
-      subset(Date != "<NA>") %>%
-      .[,colnames(.)[colnames(.)!= "" & is.na(colnames(.)) == FALSE]]
-    return(data_out)
+  if ("Date" %in% colnames(data) & class(data$Date[1])=="character") {
+    data_filter <- data %>% subset(Date != "<NA>")
   } else {
-    return(data)
+    data_filter <- data
   }
+
+  data_out <-
+    data_filter %>%
+    .[,colnames(.)[colnames(.)!= "" & is.na(colnames(.)) == FALSE]]
+
+  return(data_out)
 }
 
 
@@ -78,4 +80,59 @@ eco_format_ggplot <- function(p, y2formula="~.") {
              x = major_tick_seq, xend = major_tick_seq, size = 0.1)
 
   return(p_out)
+}
+
+
+Eco_Merge_AQMD_DataFrames <- function(chart_type, xls_data_a, xls_data_q, xls_data_m, xls_data_d, prz_data_a, prz_data_q, prz_data_m) {
+
+  if (chart_type =='Time series') {
+    # Merge A/Q/M/D data in one data.frame ')
+    merge_cols   <- c("Date")
+    data         <- data.frame(Date="1900-01-01") #  (This value will be removed after)
+    if (exists('xls_data_a')) {    if (is.na(colnames(xls_data_a)[1])==FALSE & colnames(xls_data_a)[1] != ""){data <- merge(data, xls_data_a, by=merge_cols, all.x=TRUE, all.y=TRUE)} }
+    if (exists('xls_data_q')) {    if (is.na(colnames(xls_data_q)[1])==FALSE & colnames(xls_data_q)[1] != ""){data <- merge(data, xls_data_q, by=merge_cols, all.x=TRUE, all.y=TRUE)}}
+    if (exists('xls_data_m')) {    if (is.na(colnames(xls_data_m)[1])==FALSE & colnames(xls_data_m)[1] != ""){data <- merge(data, xls_data_m, by=merge_cols, all.x=TRUE, all.y=TRUE)}}
+    if (exists('xls_data_d')) {    if (is.na(colnames(xls_data_d)[1])==FALSE & colnames(xls_data_d)[1] != ""){data <- merge(data, xls_data_d, by=merge_cols, all.x=TRUE, all.y=TRUE)}}
+
+    if (exists('prz_data_a')) {    if (is.na(colnames(prz_data_a)[1])==FALSE & colnames(prz_data_a)[1] != ""){data <- merge(data, prz_data_a, by=merge_cols, all.x=TRUE, all.y=TRUE)} }
+    if (exists('prz_data_q')) {    if (is.na(colnames(prz_data_q)[1])==FALSE & colnames(prz_data_q)[1] != ""){data <- merge(data, prz_data_q, by=merge_cols, all.x=TRUE, all.y=TRUE)} }
+    if (exists('prz_data_m')) {    if (is.na(colnames(prz_data_m)[1])==FALSE & colnames(prz_data_m)[1] != ""){data <- merge(data, prz_data_m, by=merge_cols, all.x=TRUE, all.y=TRUE)} }
+
+    #data$Date    <- as.Date(data$Date)
+    cols<-colnames(data)
+    data         <- data[-1,] # Remove the first row (1900-01-01)
+    data         <- data.frame(lapply(data,function(x) {gsub('nd',NA,x)})) # Replace 'nd' by NA
+    data         <- data.frame(lapply(data,function(x) {gsub('ND',NA,x)})) # Replace 'ND' by NA
+  }
+  if (chart_type =='Category') {
+    # Merge A/Q/M/D data in one data.frame
+    merge_cols   <- c("X")
+    data         <- data.frame(X="_") #  (This value will be removed after)
+    if (exists('xls_data_a')) {if (is.na(colnames(xls_data_a)[1])==FALSE & colnames(xls_data_a)[1] != ""){data <- merge(data, xls_data_a, by=merge_cols, all.x=TRUE, all.y=TRUE)}}
+    if (exists('xls_data_q')) {if (is.na(colnames(xls_data_q)[1])==FALSE & colnames(xls_data_q)[1] != ""){data <- merge(data, xls_data_q, by=merge_cols, all.x=TRUE, all.y=TRUE)}}
+    if (exists('xls_data_m')) {if (is.na(colnames(xls_data_m)[1])==FALSE & colnames(xls_data_m)[1] != ""){data <- merge(data, xls_data_m, by=merge_cols, all.x=TRUE, all.y=TRUE)}}
+    if (exists('xls_data_d')) {if (is.na(colnames(xls_data_d)[1])==FALSE & colnames(xls_data_d)[1] != ""){data <- merge(data, xls_data_d, by=merge_cols, all.x=TRUE, all.y=TRUE)}}
+
+    if (exists('prz_data_a')) {if (is.na(colnames(prz_data_a)[1])==FALSE & colnames(prz_data_a)[1] != ""){      data <- merge(data, prz_data_a, by=merge_cols, all.x=TRUE, all.y=TRUE)}      }
+    if (exists('prz_data_q')) {if (is.na(colnames(prz_data_q)[1])==FALSE & colnames(prz_data_q)[1] != ""){      data <- merge(data, prz_data_q, by=merge_cols, all.x=TRUE, all.y=TRUE)}      }
+    if (exists('prz_data_m')) {if (is.na(colnames(prz_data_m)[1])==FALSE & colnames(prz_data_m)[1] != ""){      data <- merge(data, prz_data_m, by=merge_cols, all.x=TRUE, all.y=TRUE)}      }
+    cols<-colnames(data)
+
+    data         <- data[-1,] # Remove the first row (1900-01-01)
+    data         <- data.frame(lapply(data,function(x) {gsub('nd',NA,x)})) # Replace 'nd' by NA
+    data         <- data.frame(lapply(data,function(x) {gsub('ND',NA,x)})) # Replace 'ND' by NA
+  }
+
+  # Convert Factor columns to numeric
+  co <- as.list(colnames(data)[!colnames(data) %in% as.character(colnames(data)[1])])
+  for (i in 1:length(co)) {
+    data[as.character(co[i])]<-lapply(data[as.character(co[i])], function(x) as.numeric(as.character(x)))
+  }
+
+   if (chart_type =='Time series') {
+     data$Date <- as.Date(data$Date)
+     data      <- data[order(data$Date),] # Order by Date
+   }
+  colnames(data)<-cols
+  return(data)
 }

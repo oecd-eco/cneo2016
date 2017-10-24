@@ -140,3 +140,33 @@ manage_axis_title<-function (param_labelY,param_YPosition )
 
   })
 }
+
+
+Eco_GetXTicks <- function(param_y_min,param_y_max, dates, year) {
+  ticksize       <- (param_y_max-param_y_min)*2.5/100
+  minor_tick_seq <- seq(head(dates, n = 1), tail(dates, n = 1), "3 month")
+  major_tick_seq <- seq(head(dates, n = 1), tail(dates, n = 1), "1 year")
+  midyeardata    <- paste0(lubridate::year(dates), "-07-01")
+  label_tick_seq <- seq(as.Date(head(midyeardata, n = 1), format="%Y-%m-%d"), as.Date(tail(midyeardata, n = 1), format="%Y-%m-%d"), paste0(year," year"))
+
+  annotation1 = function() { return(annotate(geom = "segment",
+                                             y    = param_y_min,
+                                             yend = param_y_min+(ticksize/2),
+                                             x    = minor_tick_seq,
+                                             xend = minor_tick_seq,
+                                             size = 0.1))
+  }
+  annotation2 = function() { return(annotate(geom = "segment",
+                                             y    = param_y_min,
+                                             yend = param_y_min+ticksize,
+                                             x    = major_tick_seq,
+                                             xend = major_tick_seq,
+                                             size = 0.1))
+  }
+
+
+  return(list(XTICKS_LABELS=label_tick_seq,
+              XTICKS_MINOR=annotation1,
+              XTICKS_MAJOR=annotation2)
+         )
+}
