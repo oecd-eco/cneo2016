@@ -1,0 +1,33 @@
+panel_ontop: FALSE
+x_break: 1
+y_min: -120
+y_max: 240
+y_break: 60
+YPosition: "right"
+chart_type: "Time series"
+EN:
+  title: "china"
+  subtitle:
+  labelY: "Billion USD"
+  legendX: 0.2
+  legendY: 0.9
+  legendDir: "vertical"
+  series_labels:
+    - "Goods trade"
+    - "Service trade"
+    - "Primary income"
+    - "Secondary income"
+    - "Current balance"
+FR:
+  title: "Titre"
+  subtitle:
+  labelY:
+  legendX: 0.2
+  legendY: 0.9
+  legendDir: "vertical"
+  series_labels:
+    - "Goods trade"
+    - "Service trade"
+    - "Primary income"
+    - "Secondary income"
+    - "Current balance"

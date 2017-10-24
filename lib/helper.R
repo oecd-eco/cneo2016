@@ -20,7 +20,10 @@ read_eo_sheet <- function(sheet = stop("'sheet' must be provided"),
 ## names(data) <- c(names(data)[1:3], "", NA)
 ## head(data)
 clean_df <- function(data = stop("'data' must be provided")) {
-  if ("Date" %in% colnames(data) & class(data$Date[1])=="character") {
+  ## when transformed to date: "POSIXct", "POSIXt" and not "character"
+  ## if ("Date" %in% colnames(data) & class(data$Date)[1]=="character") {
+  if ("Date" %in% colnames(data)) {
+    data$Date <- as.character(data$Date)
     data_filter <- data %>% subset(Date != "<NA>")
   } else {
     data_filter <- data

@@ -76,7 +76,7 @@ param_secondAxis_Label <- manage_axis_title(param[[lang]]$secondAxis_Label, "rig
 param_labelY <- manage_axis_title(param[[lang]]$labelY, param$YPosition)
 
 ## ported from ../lib/ECO_ggplot_theme.r
-eco_default <- yaml::yaml.load_file("../demo/eco_default.yml")
+eco_default <- yaml::yaml.load_file("../inst/extdata/eco_default.yml")
 
 if (!Sys.info()[["sysname"]] == "Linux") {
   suppressMessages(extrafont::loadfonts(device = "win")) }
