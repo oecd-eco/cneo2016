@@ -141,11 +141,20 @@ p <- data_ml %>%
   ## Set series colors
   scale_color_manual(values = eco_default$color_values[3:4])
 
-my_chart2 <- eco_format_ggplot(p = p, y2formula = "~ . * 2 + 90")
+my_chart2 <-
+  eco_format_ggplot(p = p,
+                    y2formula = "~ . * 2 + 90",
+                    y2lab = param_secondAxis_Label) +
+  annotate(geom = "segment",
+           y = param$y_min,
+           yend = param$y_min + ticksize,
+           x = major_tick_seq,
+           xend = major_tick_seq,
+           size = 0.1)
 
 ```
 
-```{r plot}
+```{r plot, dev.args=list(bg='transparent')}
 print(my_chart2)
 
 ```

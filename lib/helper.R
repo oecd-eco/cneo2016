@@ -36,8 +36,40 @@ clean_df <- function(data = stop("'data' must be provided")) {
   return(data_out)
 }
 
+scale_y_continuous2 <- function(y2formula = stop("'y2formula' must be provided"),
+                                y2lab = "") {
+  if (y2formula == "~.") {
+    fun <-
+      scale_y_continuous(position = param$YPosition,
+                         breaks = seq(from = param$y_min,
+                                      to = param$y_max,
+                                      by = param$y_break),
+                         expand = c(0, 0))
+  } else {
+    fun <-
+      scale_y_continuous(position = param$YPosition,
+                         breaks = seq(from = param$y_min,
+                                      to = param$y_max,
+                                      by = param$y_break),
+                         ## Second Y axis
+                         sec.axis = sec_axis(trans = as.formula(y2formula),
+                                             name = y2lab,
+                                             breaks = seq(param$secondAxis_Min,
+                                                          param$secondAxis_Max,
+                                                          param$secondAxis_Break)
+                                             ),
+                         expand = c(0, 0))
+  }
+  return(fun)
+}
 
-eco_format_ggplot <- function(p, y2formula="~.") {
+eco_format_ggplot <- function(p,
+                              y2formula="~.",
+                              ## y2lab="",
+                              breaks=label_tick_seq,
+                              ticksOnX="NO",
+                              ...) {
+
   p_out <- p +
     expand_limits(y = c(param$y_min, param$y_max)) +
     ##
@@ -47,22 +79,28 @@ eco_format_ggplot <- function(p, y2formula="~.") {
     geom_hline(yintercept = c(0), color = "black") +
     ##
     ## Set X ticks
-    scale_x_date(breaks = label_tick_seq,
+    scale_x_date(breaks = breaks,
                  date_labels = "%Y",
                  expand = c(0,0)) +
     ##
     ## Set Y ticks
-    scale_y_continuous(position = param$YPosition,
-                       breaks = seq(from = param$y_min,
-                                    to = param$y_max,
-                                    by = param$y_break),
-                       ## Second Y axis
-                       sec.axis = sec_axis(trans = as.formula(y2formula),
-                                           name = param_secondAxis_Label,
-                                           breaks = seq(param$secondAxis_Min,
-                                                        param$secondAxis_Max,
-                                                        param$secondAxis_Break)),
-                       expand = c(0, 0)) +
+    scale_y_continuous2(y2formula = y2formula,
+                        ...) +
+    ## scale_y_continuous(position = param$YPosition,
+    ##                    breaks = seq(from = param$y_min,
+    ##                                 to = param$y_max,
+    ##                                 by = param$y_break),
+    ##                    ## Second Y axis
+    ##                    ## sec.axis = sec_axis(trans = as.formula(y2formula),
+    ##                    ##                     name = y2lab
+    ##                                       ## ,
+    ##                                       ##  breaks = seq(param$secondAxis_Min,
+    ##                                       ##               param$secondAxis_Max,
+    ##                                       ##               param$secondAxis_Break)
+    ##                   ##                      )
+    ##                    ## ,
+    ##                    ,
+    ##                    expand = c(0, 0)) +
     ##
     ## Add title, subtiles, x/y labels
     labs(x = "",
@@ -78,9 +116,13 @@ eco_format_ggplot <- function(p, y2formula="~.") {
               legenddirection = param[[lang]]$legendDir,
               panelontop = param$panel_ontop,
               rotateXLabel = "NO",
-              ticksOnX = "NO")+
-    annotate(geom = "segment", y = param$y_min, yend = param$y_min + ticksize,
-             x = major_tick_seq, xend = major_tick_seq, size = 0.1)
+              ticksOnX = ticksOnX) # +
+  ## annotate(geom = "segment",
+  ##          y = param$y_min,
+  ##          yend = param$y_min + ticksize,
+  ##          x = major_tick_seq,
+  ##          xend = major_tick_seq,
+  ##          size = 0.1)
 
   return(p_out)
 }

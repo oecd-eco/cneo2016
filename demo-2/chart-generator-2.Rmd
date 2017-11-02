@@ -83,13 +83,10 @@ eco_default <- yaml::yaml.load_file("../inst/extdata/eco_default.yml")
 
 ```{r data}
 sheets <- c("A", "Q", "M", "D")
-## dat_empty <- data.frame(Date = "1900-01-01")
 
 DATA <- lapply(sheets,
                function(x) read_eo_sheet(sheet = paste0("DATA_", x),
                                          file = "../data-raw/_TEST_CHN_DEF.xlsx"
-                                        ## ,
-                                        ##  dat_empty = dat_empty
                                          ))
 names(DATA) <- sheets
 
@@ -99,10 +96,6 @@ prz_data_a  <- prz_data_q <- prz_data_m <- data.frame(NULL)
 ## Merge A/Q/M/D data in one data.frame
 data <- Eco_Merge_AQMD_DataFrames(
   param$chart_type,
-  ## xls_data_a,
-  ## xls_data_q,
-  ## xls_data_m,
-  ## xls_data_d,
   DATA$A,
   DATA$Q,
   DATA$M,
@@ -128,96 +121,61 @@ xTicks$XTICKS_LABELS[5] <- "2017-01-01"
 
 ## Bar/Stacked Bar preparation
 stackedbar_order <- tribble(
-  ~cSeries, ~cOrder,
-  "Goods trade", "1",
-  "Service trade", "2",
-  "Primary income", "3",
-  "Secondary income", "4")
+  ~variable, ~type,
+  "Goods trade", "bar",
+  "Service trade", "bar",
+  "Primary income", "bar",
+  "Secondary income", "bar",
+  "Current balance", "line")
 
+stackedbar_data <-
+  data %>%
+  gather(key = variable, value = value, -Date) %>%
+  filter(!is.na(variable)) %>%
+  left_join(stackedbar_order, by = "variable")
 
-## You can change order in stacked-bar here (in the column cGroupOrder)
-stackedbar_group_order <- tribble(
-  ~cSeries, ~cGroupOrder,
-  "Goods trade", "4",
-  "Service trade", "3",
-  "Primary income", "2",
-  "Secondary income", "1")
-
-stackedbar_data <- na.omit(melt(data[,c("Date","Goods trade","Service trade","Primary income","Secondary income")],id=c("Date")))
-stackedbar_data$variable <- as.character(stackedbar_data$variable)
-stackedbar_data <- inner_join(x = stackedbar_data,
-                              y = stackedbar_order,
-                              by = c("variable"="cSeries"))
-stackedbar_data <- inner_join(x = stackedbar_data,
-                              y = stackedbar_group_order,
-                              by = c("variable"="cSeries"))
+stackedbar_data$variable <- factor(stackedbar_data$variable, levels = stackedbar_order$variable)
 
 if (interactive()==TRUE) { graphics.off() }
 
-my_chart <- ggplot(data = data) +
-  expand_limits(y = c(param$y_min, param$y_max)) +
+my_chart <-
+  ggplot(data = stackedbar_data) +
   ## Series "Goods trade","Service trade","Primary income","Secondary income" (Stacked-bar)
-  geom_bar(data = stackedbar_data,
-           mapping = aes(x = Date,
-                         y = value,
-                         fill = cOrder,
-                         group = cGroupOrder),
-           stat = "identity",
-           position = "stack",
-           color = "black",
-           size = 0.3) +
-                                        # Series 5: Current balance (Color=black, Geom=line, Line type=solid)
-  geom_line(data = na.omit(data[,c("Date", "Current balance")]),
-            mapping = aes(x = Date,
-                          y = `Current balance`,
-                          color = "5"),
-            size = eco_default$line_width,
-            linetype = "solid") +
+  geom_bar(
+    data = function(x) { x[x$type %in% c("bar"), ] },
+    mapping = aes(x = Date,
+                  y = value,
+                  fill = variable,
+                  group = rev(variable)),
+    stat = "identity",
+    position = "stack",
+    color = "black",
+    size = 0.3
+  ) +
+  ## Series 5: Current balance (Color=black, Geom=line, Line type=solid)
+  geom_line(
+    data = function(x) { x[x$type %in% c("line"), ] },
+    aes(x = Date, y = value, color = factor(1)),
+    size = eco_default$line_width,
+    linetype = "solid"
+  )  +
   ## Set series colors
-  scale_color_manual(labels = c("5" = param[[lang]]$series_labels[5]),
-                     values = c("5" = eco_default$color_values[11])) +
-  scale_fill_manual(labels = c("1" = param[[lang]]$series_labels[1],
-                               "2" = param[[lang]]$series_labels[2],
-                               "3" = param[[lang]]$series_labels[3],
-                               "4" = param[[lang]]$series_labels[4]),
-                    values = c("1" = eco_default$color_values[1],
-                               "2" = eco_default$color_values[4],
-                               "3" = eco_default$color_values[3],
-                               "4" = eco_default$color_values[8])) +
-  ## Reference Line (horizontal)
-  geom_hline(yintercept =  c(0),
-             color = "black",
-             linetype = "solid") +
-  ## Set X ticks
-  scale_x_date(breaks = xTicks$XTICKS_LABELS,
-               date_labels = "%Y",
-               expand = c(0,0)) +
-  ## Set Y ticks
-  scale_y_continuous(position = param$YPosition,
-                     breaks = seq(from = param$y_min,
-                                  to = param$y_max,
-                                  by = param$y_break),
-                     expand = c(0, 0)) +
-  ## Add title, subtiles, x/y labels
-  labs(x = "",
-       y = param_labelY,
-       title = param[[lang]]$title,
-       subtitle = param[[lang]]$subtitle) +
-  ## The 0.001 fix a bug on double axis display (for "DEU Labour market")
-  coord_cartesian(ylim = c(param$y_min - 0.001 * abs(param$y_min), param$y_max)) +
-  ## Apply ECO theme
-  theme_ECO(legendposition = c(param[[lang]]$legendX, param[[lang]]$legendY),
-            legenddirection = param[[lang]]$legendDir,
-            panelontop = param$panel_ontop,
-            rotateXLabel = "NO",
-            ticksOnX = "YES") +
+  scale_color_manual(labels = c(param[[lang]]$series_labels[5]),
+                     values = c(eco_default$color_values[11])) +
+  scale_fill_manual(labels = c(param[[lang]]$series_labels[1:4]),
+                    values = c(eco_default$color_values[c(1, 4, 3, 8)]))
+
+my_chart2 <-
+  eco_format_ggplot(p = my_chart,
+                    breaks = xTicks$XTICKS_LABELS,
+                    ticksOnX = "YES") +
   xTicks$XTICKS_MINOR() +
   xTicks$XTICKS_MAJOR()
 
 ```
 
 
-```{r plot}
-print(my_chart)
+```{r plot, dev.args=list(bg='transparent')}
+print(my_chart2)
 
 ```

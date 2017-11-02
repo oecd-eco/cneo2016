@@ -51,8 +51,10 @@ theme_ECO <- function (legendposition,legenddirection, ticksOnX="YES", rotateXLa
   theme_base(base_size=10, base_family= "Arial") %+replace%
     theme(
       plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"),
-      plot.background   = element_blank(),
-      panel.background  = element_blank(), # backgroung of the chart
+      ## plot.background   = element_blank(),
+      ## panel.background  = element_blank(), # backgroung of the chart
+      panel.background = element_rect(fill = "transparent", colour = NA),
+      plot.background = element_rect(fill = "transparent", colour = NA),
       panel.border      = element_blank(), # remove border around the graph
       panel.ontop       = panelontop,      # to see grid on top
       plot.title        = element_text(hjust  = 0.5,
