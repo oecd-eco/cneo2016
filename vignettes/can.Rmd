@@ -11,7 +11,7 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
- 
+
 ```{r init, message=FALSE, warning=FALSE, echo=FALSE}
 library(cneo2016)
 library(stringr)
